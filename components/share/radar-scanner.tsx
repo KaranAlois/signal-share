@@ -71,9 +71,8 @@ export function RadarScanner({ onFilesSelected }: RadarScannerProps) {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => isIdle && inputRef.current?.click()}
-        className={`relative flex items-center justify-center w-[min(550px,90vw)] h-[min(550px,90vw)] rounded-full cursor-pointer transition-all duration-500 ${
-          isDragOver ? 'scale-105' : ''
-        }`}
+        className={`relative flex items-center justify-center w-[min(550px,90vw)] h-[min(550px,90vw)] rounded-full cursor-pointer transition-all duration-500 ${isDragOver ? 'scale-105' : ''
+          }`}
         whileHover={isIdle ? { scale: 1.02 } : {}}
         whileTap={isIdle ? { scale: 0.98 } : {}}
       >
@@ -137,10 +136,10 @@ export function RadarScanner({ onFilesSelected }: RadarScannerProps) {
                 className="flex flex-col items-center gap-2"
               >
                 <span className="text-foreground/90 font-bold tracking-widest uppercase text-sm">
-                  Drop files to initiate transmission
+                  Drop files here to initiate transmission
                 </span>
                 <span className="text-muted-foreground text-xs font-mono uppercase tracking-wider">
-                  Scanning local network...
+                  Click to select files
                 </span>
               </motion.div>
             )}

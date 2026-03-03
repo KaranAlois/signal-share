@@ -5,6 +5,7 @@ import { signaling } from '@/lib/webrtc/signaling';
 import { useTransferStore } from '@/lib/stores/transfer-store';
 import { useAppStore } from '@/lib/stores/app-store';
 import { useWebRTC } from './use-webrtc';
+import { useRelay } from './use-relay';
 
 export function useTransfer() {
   const {
@@ -19,12 +20,14 @@ export function useTransfer() {
     transferMode,
     setFiles,
     setRole,
+    setStatus,
     setIncomingTransfer,
     reset,
   } = useTransferStore();
 
   const { setView } = useAppStore();
   const { startTransfer: rtcStart, receiveTransfer: rtcReceive, cleanup: rtcCleanup } = useWebRTC();
+  const { startRelayTransfer, receiveRelayTransfer, cleanupRelay } = useRelay();
 
   // Guard ref to prevent duplicate WebRTC setup from effect re-runs
   const receiverSetupDone = useRef(false);
@@ -58,7 +61,7 @@ export function useTransfer() {
   // Set up PeerConnectionManager to listen for the sender's offer,
   // then signal readiness so the sender can create the offer.
   useEffect(() => {
-    if (status === 'connecting' && role === 'receiver' && remotePeerId && transferMode === 'local' && sessionId) {
+    if (status === 'connecting' && role === 'receiver' && remotePeerId && sessionId) {
       // Guard: only set up once per transfer
       if (receiverSetupDone.current) return;
       receiverSetupDone.current = true;
@@ -91,6 +94,22 @@ export function useTransfer() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Listen for receiver-ready (relay mode) ──
+  // This is sent by the server when the receiver connects to the SSE download endpoint
+  useEffect(() => {
+    const cleanup = signaling.on('receiver-ready', (msg) => {
+      const sid = msg.sessionId as string;
+      const state = useTransferStore.getState();
+      if (state.role === 'sender' && state.files.length > 0) {
+        // Only start relay if we are not already transferring via WebRTC
+        if (state.status !== 'transferring') {
+          startRelayTransfer(sid, state.files);
+        }
+      }
+    });
+    return cleanup;
+  }, [startRelayTransfer]);
+
   // ── Cleanup on cancel/error from the other party ──
   // When the peer cancels or disconnects, we need to tear down WebRTC
   // and release the transferLock so the user can start a new transfer.
@@ -102,12 +121,13 @@ export function useTransfer() {
       }),
       signaling.on('transfer-error', () => {
         rtcCleanup();
+        cleanupRelay();
         receiverSetupDone.current = false;
       }),
     ];
     return () => cleanups.forEach((c) => c());
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [rtcCleanup, cleanupRelay]);
 
   // Share files — create session
   const shareFiles = useCallback(
@@ -206,10 +226,25 @@ export function useTransfer() {
       signaling.send({ type: 'transfer-cancel', sessionId });
     }
     rtcCleanup();
+    cleanupRelay();
     receiverSetupDone.current = false;
     reset();
     setView('home');
-  }, [sessionId, rtcCleanup, reset, setView]);
+  }, [sessionId, rtcCleanup, cleanupRelay, reset, setView]);
+
+  // Force relay mode (can be called if WebRTC is stuck)
+  const forceRelay = useCallback(() => {
+    if (!sessionId || !remotePeerId) return;
+    
+    // Stop WebRTC
+    rtcCleanup();
+    
+    if (role === 'sender') {
+      setStatus('connecting');
+    } else {
+      receiveRelayTransfer(sessionId, fileInfos);
+    }
+  }, [sessionId, remotePeerId, role, rtcCleanup, setStatus, receiveRelayTransfer, fileInfos]);
 
   // Go back to home
   const goHome = useCallback(() => {
@@ -236,5 +271,6 @@ export function useTransfer() {
     declineIncoming,
     cancelTransfer,
     goHome,
+    forceRelay,
   };
 }

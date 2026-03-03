@@ -3,10 +3,13 @@ import { signaling } from './signaling';
 const CHUNK_SIZE = 64 * 1024; // 64KB per data channel message
 const RTC_CONFIG: RTCConfiguration = {
   iceServers: [
-    // No STUN/TURN needed for LAN
-    // Add Google STUN as fallback for edge cases
     { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
   ],
+  iceCandidatePoolSize: 10,
 };
 
 export interface PeerConnectionCallbacks {

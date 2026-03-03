@@ -57,10 +57,11 @@ export function useWebRTC() {
           transferLock = false;
         },
         onError: (error) => {
+          if (useTransferStore.getState().status === 'complete') return;
           console.error('WebRTC transfer error:', error);
           const fileInfos = files.map((f) => ({ name: f.name, size: f.size, type: f.type || 'application/octet-stream' }));
           const totalSize = files.reduce((sum, f) => sum + f.size, 0);
-          setErrorDetails(error.message, {
+          setErrorDetails(error.name === 'TimeoutError' ? 'P2P connection timed out. This usually happens when both devices are behind strict firewalls.' : error.message, {
             files: fileInfos,
             totalSize,
             code: error.name === 'TimeoutError' ? 'TIMEOUT' : 'CONNECTION_FAILED',
@@ -72,6 +73,7 @@ export function useWebRTC() {
           if (state === 'connected') {
             setStatus('transferring');
           } else if (state === 'failed' || state === 'disconnected') {
+            if (useTransferStore.getState().status === 'complete') return;
             const fileInfos = files.map((f) => ({ name: f.name, size: f.size, type: f.type || 'application/octet-stream' }));
             const totalSize = files.reduce((sum, f) => sum + f.size, 0);
             setErrorDetails(`WebRTC connection ${state}`, {
@@ -96,11 +98,15 @@ export function useWebRTC() {
 
         await pc.sendFiles(files);
       } catch (error) {
+        if (useTransferStore.getState().status === 'complete') {
+          transferLock = false;
+          return;
+        }
         console.error('Transfer failed:', error);
         const fileInfos = files.map((f) => ({ name: f.name, size: f.size, type: f.type || 'application/octet-stream' }));
         const totalSize = files.reduce((sum, f) => sum + f.size, 0);
         const msg = error instanceof Error ? error.message : 'Unknown error';
-        setErrorDetails(msg, {
+        setErrorDetails(msg.includes('timed out') ? 'P2P connection timed out. This usually happens when both devices are behind strict firewalls.' : msg, {
           files: fileInfos,
           totalSize,
           code: msg.includes('timed out') ? 'TIMEOUT' : 'SEND_FAILED',
@@ -156,6 +162,7 @@ export function useWebRTC() {
           transferLock = false;
         },
         onError: (error) => {
+          if (useTransferStore.getState().status === 'complete') return;
           console.error('WebRTC receive error:', error);
           setErrorDetails(error.message, { code: 'RECEIVE_FAILED' });
           transferLock = false;
@@ -163,6 +170,11 @@ export function useWebRTC() {
         onStateChange: (state) => {
           if (state === 'connected') {
             setStatus('transferring');
+          } else if (state === 'failed' || state === 'disconnected') {
+            if (useTransferStore.getState().status === 'complete') return;
+            setErrorDetails(`WebRTC connection ${state}`, { code: state === 'failed' ? 'RTC_FAILED' : 'RTC_DISCONNECTED' });
+            signaling.send({ type: 'transfer-error', targetId: senderPeerId, sessionId, reason: `Peer connection ${state}` });
+            transferLock = false;
           }
         },
       });
