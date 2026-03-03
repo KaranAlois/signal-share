@@ -3,16 +3,31 @@
 import { motion } from 'framer-motion';
 import { useTransferStore } from '@/lib/stores/transfer-store';
 import { formatBytes, formatSpeed, formatETA } from '@/lib/webrtc/file-chunker';
+import { useTransfer } from '@/hooks/use-transfer';
+import { useEffect, useState } from 'react';
 
 export function TransferProgress() {
-  const progress = useTransferStore((s) => s.progress);
-  const status = useTransferStore((s) => s.status);
-  const fileInfos = useTransferStore((s) => s.fileInfos);
+  const { forceRelay } = useTransfer();
+  const progress = useTransferStore((s: any) => s.progress);
+  const status = useTransferStore((s: any) => s.status);
+  const fileInfos = useTransferStore((s: any) => s.fileInfos);
+  const [showRelayOption, setShowRelayOption] = useState(false);
 
   const percentage =
     progress.totalBytes > 0
       ? Math.min((progress.bytesTransferred / progress.totalBytes) * 100, 100)
       : 0;
+
+  // Show relay option after 8 seconds of connecting
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (status === 'connecting') {
+      timer = setTimeout(() => setShowRelayOption(true), 8000);
+    } else {
+      setShowRelayOption(false);
+    }
+    return () => clearTimeout(timer);
+  }, [status]);
 
   const radius = 180;
   const circumference = 2 * Math.PI * radius;
@@ -76,6 +91,17 @@ export function TransferProgress() {
               transition={{ duration: 1, ease: "easeOut" }}
             />
           )}
+
+          {showRelayOption && (
+            <motion.button
+              onClick={forceRelay}
+              className="mt-6 px-4 py-2 rounded-full bg-primary/20 hover:bg-primary/30 text-[10px] font-bold text-primary border border-primary/30 backdrop-blur-sm transition-colors"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              CONNECTION SLOW? TRY RELAY MODE
+            </motion.button>
+          )}
         </div>
       </div>
 
@@ -92,7 +118,7 @@ export function TransferProgress() {
           }
         }}
       >
-        {fileInfos.map((file, index) => {
+        {fileInfos.map((file: any, index: number) => {
           const isCurrent = index === progress.fileIndex;
           const isPast = index < progress.fileIndex;
           const isComplete = status === 'complete' || isPast;
@@ -101,7 +127,7 @@ export function TransferProgress() {
           if (isComplete) fileProgress = 100;
           else if (isCurrent) {
             // Estimate current file progress
-            const previousFilesBytes = fileInfos.slice(0, index).reduce((acc, f) => acc + f.size, 0);
+            const previousFilesBytes = fileInfos.slice(0, index).reduce((acc: any, f: any) => acc + f.size, 0);
             const currentFileBytesTransferred = Math.max(0, progress.bytesTransferred - previousFilesBytes);
             fileProgress = Math.min(100, (currentFileBytesTransferred / file.size) * 100);
           }

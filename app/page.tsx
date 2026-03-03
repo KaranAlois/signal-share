@@ -99,23 +99,21 @@ function HomeView() {
       <div className="fixed top-24 right-6 z-40 flex items-center rounded-full border border-primary/20 bg-background/40 backdrop-blur-md p-1 shadow-[0_0_15px_rgba(var(--primary),0.1)]">
         <button
           onClick={() => setMode('local')}
-          className={`px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest transition-all ${
-            mode === 'local'
+          className={`px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest transition-all ${mode === 'local'
               ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(var(--primary),0.2)]'
               : 'text-muted-foreground hover:text-foreground'
-          }`}
+            }`}
         >
-          Direct
+          Send
         </button>
         <button
           onClick={() => setMode('link')}
-          className={`px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest transition-all ${
-            mode === 'link'
+          className={`px-4 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest transition-all ${mode === 'link'
               ? 'bg-primary/20 text-primary shadow-[0_0_10px_rgba(var(--primary),0.2)]'
               : 'text-muted-foreground hover:text-foreground'
-          }`}
+            }`}
         >
-          Relay
+          Receive
         </button>
       </div>
 
@@ -435,9 +433,9 @@ export default function Home() {
       {/* SEO & Footer Section - only visible when home */}
       {view === 'home' && (
         <motion.div
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           className="w-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="w-full"
         >
           <InfoSection />
         </motion.div>
