@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useTransfer } from '@/hooks/use-transfer';
 import { useTransferStore } from '@/lib/stores/transfer-store';
 import { usePeersStore } from '@/lib/stores/peers-store';
+import { processDataTransfer } from '@/lib/utils/zip';
 
 interface RadarScannerProps {
   onFilesSelected: (files: File[]) => void;
@@ -12,6 +13,7 @@ interface RadarScannerProps {
 
 export function RadarScanner({ onFilesSelected }: RadarScannerProps) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const peers = usePeersStore((s) => s.nearbyPeers);
   const status = useTransferStore((s) => s.status);
@@ -29,14 +31,21 @@ export function RadarScanner({ onFilesSelected }: RadarScannerProps) {
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragOver(false);
 
-      const files = Array.from(e.dataTransfer.files);
-      if (files.length > 0) {
-        onFilesSelected(files);
+      setIsProcessing(true);
+      try {
+        const files = await processDataTransfer(e.dataTransfer);
+        if (files.length > 0) {
+          onFilesSelected(files);
+        }
+      } catch (err) {
+        console.error('Error processing dropped items', err);
+      } finally {
+        setIsProcessing(false);
       }
     },
     [onFilesSelected],
@@ -127,6 +136,19 @@ export function RadarScanner({ onFilesSelected }: RadarScannerProps) {
                   Release to transmit
                 </span>
               </motion.div>
+            ) : isProcessing ? (
+              <motion.div
+                key="processing"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex flex-col items-center gap-2"
+              >
+                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin mb-2" />
+                <span className="text-primary font-bold tracking-widest uppercase text-sm drop-shadow-[0_0_8px_rgba(var(--primary),0.8)]">
+                  Zipping contents...
+                </span>
+              </motion.div>
             ) : (
               <motion.div
                 key="idle"
@@ -136,7 +158,7 @@ export function RadarScanner({ onFilesSelected }: RadarScannerProps) {
                 className="flex flex-col items-center gap-2"
               >
                 <span className="text-foreground/90 font-bold tracking-widest uppercase text-sm">
-                  Drop files here to initiate transmission
+                  Drop files/folders here to initiate transmission
                 </span>
                 <span className="text-muted-foreground text-xs font-mono uppercase tracking-wider">
                   Click to select files

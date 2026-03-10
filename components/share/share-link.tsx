@@ -3,6 +3,8 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Copy01Icon as CopyIcon, CheckmarkCircle02Icon as CheckIcon } from '@hugeicons/core-free-icons';
 
 interface ShareLinkProps {
   link: string;
@@ -12,9 +14,13 @@ export function ShareLink({ link }: ShareLinkProps) {
   const [copied, setCopied] = useState(false);
 
   const copyLink = useCallback(async () => {
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
   }, [link]);
 
   return (
@@ -22,36 +28,50 @@ export function ShareLink({ link }: ShareLinkProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: 0.2 }}
-      className="flex flex-col items-center gap-3 w-full max-w-md"
+      className="flex flex-col items-center gap-4 w-full max-w-lg"
     >
-      <div className="flex items-center gap-2 w-full rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 backdrop-blur-md shadow-[0_0_15px_rgba(var(--primary),0.1)]">
-        <span className="flex-1 truncate text-xs text-primary/90 font-mono tracking-wider">{link}</span>
+      <div className="flex flex-col gap-3 w-full rounded-2xl border border-primary/20 bg-card/40 p-4 backdrop-blur-xl shadow-[0_0_20px_rgba(var(--primary),0.1)]">
+        <div className="flex flex-col gap-1.5 overflow-hidden">
+          <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground/60">Share Link</span>
+          <span className="break-all text-xs text-primary/90 font-mono tracking-tight leading-relaxed bg-primary/5 p-3 rounded-lg border border-primary/10">
+            {link}
+          </span>
+        </div>
+        
         <Button
-          variant="ghost"
-          size="sm"
           onClick={copyLink}
-          className="shrink-0 text-[10px] font-mono uppercase tracking-widest text-primary hover:text-primary hover:bg-primary/20 border border-primary/30"
+          className={`
+            w-full flex items-center justify-center gap-2 font-mono text-xs uppercase tracking-widest h-11 transition-all duration-300
+            ${copied 
+              ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/30' 
+              : 'bg-primary/20 text-primary border-primary/30 hover:bg-primary/30'
+            }
+            border
+          `}
         >
           <AnimatePresence mode="wait">
             {copied ? (
-              <motion.span
+              <motion.div
                 key="check"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                className="text-emerald-400"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                className="flex items-center gap-2"
               >
-                COPIED
-              </motion.span>
+                <HugeiconsIcon icon={CheckIcon} className="w-4 h-4" />
+                <span>LINK COPIED</span>
+              </motion.div>
             ) : (
-              <motion.span
+              <motion.div
                 key="copy"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                className="flex items-center gap-2"
               >
-                COPY LINK
-              </motion.span>
+                <HugeiconsIcon icon={CopyIcon} className="w-4 h-4" />
+                <span>COPY LINK TO CLIPBOARD</span>
+              </motion.div>
             )}
           </AnimatePresence>
         </Button>

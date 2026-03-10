@@ -6,6 +6,7 @@ import { useTransferStore } from '@/lib/stores/transfer-store';
 import { useAppStore } from '@/lib/stores/app-store';
 import { useWebRTC } from './use-webrtc';
 import { useRelay } from './use-relay';
+import { historyDB } from '@/lib/db/history';
 
 export function useTransfer() {
   const {
@@ -50,6 +51,28 @@ export function useTransfer() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
+  // ── Save Transfer History on Complete ──
+  // When status becomes 'complete', log it to the IndexedDB
+  const historySavedForSession = useRef<string | null>(null);
+  
+  useEffect(() => {
+    if (status === 'complete' && sessionId && historySavedForSession.current !== sessionId) {
+      historySavedForSession.current = sessionId;
+      const state = useTransferStore.getState();
+      const filesToSave = state.fileInfos.length > 0 ? state.fileInfos : state.files.map(f => ({ name: f.name, size: f.size }));
+      const totalSize = filesToSave.reduce((acc, f) => acc + f.size, 0);
+      
+      historyDB.addTransaction({
+        id: sessionId,
+        type: role === 'sender' ? 'sent' : 'received',
+        peerName: state.remotePeerName || 'Unknown Peer',
+        files: filesToSave.map(f => ({ name: f.name, size: f.size })),
+        totalSize,
+        timestamp: Date.now(),
+      }).catch(err => console.error("Failed to save history", err));
+    }
+  }, [status, sessionId, role]);
+
   // ── Sender: when receiver joins via code/link (local WebRTC) ──
   // Don't start immediately — wait for receiver to signal it's ready.
   // The sender effect gets the remotePeerId from the 'receiver-joined' message,
@@ -62,11 +85,13 @@ export function useTransfer() {
   // then signal readiness so the sender can create the offer.
   useEffect(() => {
     if (status === 'connecting' && role === 'receiver' && remotePeerId && sessionId) {
+      console.log('[useTransfer] Receiver connecting, setting up WebRTC...', { remotePeerId, sessionId });
       // Guard: only set up once per transfer
       if (receiverSetupDone.current) return;
       receiverSetupDone.current = true;
 
       rtcReceive(remotePeerId, sessionId);
+      console.log('[useTransfer] Sending receiver-rtc-ready to', remotePeerId);
       // Tell the sender we're ready to receive WebRTC offers
       signaling.send({
         type: 'receiver-rtc-ready',
@@ -83,11 +108,15 @@ export function useTransfer() {
   // to avoid race conditions where transfer-accepted hasn't arrived yet.
   useEffect(() => {
     const cleanup = signaling.on('receiver-rtc-ready', (msg) => {
+      console.log('[useTransfer] receiver-rtc-ready received', msg);
       const sid = msg.sessionId as string;
       const receiverId = msg.fromId as string;
       const state = useTransferStore.getState();
       if (state.role === 'sender' && state.files.length > 0 && receiverId) {
+        console.log('[useTransfer] Sender starting RTC transfer to', receiverId);
         rtcStart(receiverId, sid, state.files);
+      } else {
+        console.warn('[useTransfer] receiver-rtc-ready ignored:', { role: state.role, fileCount: state.files.length, receiverId });
       }
     });
     return cleanup;
