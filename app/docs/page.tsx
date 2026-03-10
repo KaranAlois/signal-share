@@ -141,6 +141,27 @@ export default function DocsPage() {
             <p className="flex items-start gap-2">
               <span className="text-emerald-400">✓</span> Relay data automatically detonates after transmission
             </p>
+            <p className="flex items-start gap-2">
+              <span className="text-emerald-400">✓</span> Local Transfer History is securely stored in your browser's IndexedDB
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <h2 className="text-xl font-bold tracking-widest uppercase text-foreground border-b border-border/10 pb-2">Client Capabilities</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-6 bg-card/20 border border-primary/20 rounded-xl space-y-3 backdrop-blur-sm">
+              <h3 className="font-bold tracking-widest uppercase text-primary">Global Drag & Drop</h3>
+              <p className="text-xs font-mono text-muted-foreground leading-relaxed">
+                Drag files anywhere on the application window to initiate an instant transfer overlay. Highly optimized for desktop users.
+              </p>
+            </div>
+            <div className="p-6 bg-card/20 border border-primary/20 rounded-xl space-y-3 backdrop-blur-sm">
+              <h3 className="font-bold tracking-widest uppercase text-primary">Directory Auto-Zipping</h3>
+              <p className="text-xs font-mono text-muted-foreground leading-relaxed">
+                Drop entire folders onto the scanner. The client uses <code>jszip</code> to aggregate and compress the directory tree into a single archive before sending it over WebRTC.
+              </p>
+            </div>
           </div>
         </div>
 

@@ -13,7 +13,7 @@ import { useTransferStore } from '@/lib/stores/transfer-store';
 import { useAppStore } from '@/lib/stores/app-store';
 import { formatBytes } from '@/lib/webrtc/file-chunker';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Alert01Icon } from '@hugeicons/core-free-icons';
+import { Alert01Icon, SecurityLockIcon } from '@hugeicons/core-free-icons';
 
 interface SessionInfo {
   id: string;
@@ -101,144 +101,152 @@ export default function ReceivePage() {
 
   return (
     <AppShell>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md mx-auto space-y-6"
-      >
-        {!joined ? (
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_0_50px_rgba(var(--primary),0.15)]">
-            {/* Ambient glow */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/20 blur-3xl" />
+      <div className="min-h-[calc(100vh-8rem)] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md mx-auto space-y-6"
+        >
+          {!joined ? (
+            <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-background/80 backdrop-blur-xl shadow-[0_0_50px_rgba(var(--primary),0.15)]">
+              {/* Ambient glow */}
+              <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/20 blur-3xl" />
 
-            <div className="relative p-6 flex flex-col items-center text-center gap-4">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', delay: 0.1 }}
-                className="relative"
-              >
-                <div className="absolute inset-0 rounded-full border border-primary/50 animate-ping" />
-                <DeviceAvatar name={sessionInfo.senderName} size="lg" active showTooltip={false} />
-              </motion.div>
-
-              <div className="space-y-1">
-                <h2 className="text-lg font-bold tracking-widest uppercase text-foreground/90">Incoming Signal</h2>
-                <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
-                  From <span className="text-primary">{sessionInfo.senderName}</span>
-                </p>
-              </div>
-
-              <div className="w-full rounded-xl border border-border/20 bg-card/30 p-3 space-y-2">
-                {sessionInfo.files.map((file, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + i * 0.05 }}
-                    className="flex items-center justify-between text-xs font-mono"
-                  >
-                    <span className="truncate text-foreground/80 pr-2">{file.name}</span>
-                    <span className="text-primary/80 shrink-0">
-                      {formatBytes(file.size)}
-                    </span>
-                  </motion.div>
-                ))}
-
-                <div className="pt-2 mt-2 border-t border-border/20 text-[10px] font-mono text-muted-foreground uppercase tracking-widest flex justify-between">
-                  <span>{sessionInfo.files.length} FILE{sessionInfo.files.length !== 1 ? 'S' : ''}</span>
-                  <span>{formatBytes(sessionInfo.totalSize)} TOTAL</span>
-                </div>
-              </div>
-
-              {!isConnected && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-[10px] font-mono text-amber-500 uppercase tracking-widest"
-                >
-                  Establishing connection...
-                </motion.p>
-              )}
-
-              <div className="flex w-full gap-3 mt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10 font-mono uppercase tracking-widest text-xs"
-                  onClick={() => window.location.href = '/'}
-                >
-                  Reject
-                </Button>
-                <Button
-                  className="flex-1 bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 font-mono uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(var(--primary),0.2)]"
-                  onClick={handleAccept}
-                  disabled={!isConnected}
-                >
-                  Accept
-                </Button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-8">
-            <div className="text-center space-y-2">
-              <h1 className="text-2xl font-bold tracking-widest uppercase text-foreground/90">
-                {status === 'connecting' && 'Establishing Link'}
-                {status === 'transferring' && 'Receiving Data'}
-                {status === 'complete' && 'Transmission Complete'}
-                {status === 'error' && 'Transmission Failed'}
-              </h1>
-              <div className="flex items-center justify-center gap-2">
-                <DeviceAvatar name={sessionInfo.senderName} size="sm" />
-                <span className="text-sm font-mono text-primary/80 uppercase tracking-wider">
-                  From {sessionInfo.senderName}
-                </span>
-              </div>
-            </div>
-
-            {status === 'connecting' && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative flex items-center justify-center w-64 h-64 mx-auto"
-              >
-                <div className="absolute inset-0 rounded-full border border-primary/20" />
+              <div className="relative p-6 flex flex-col items-center text-center gap-4">
                 <motion.div
-                  className="absolute inset-0 rounded-full border-2 border-primary"
-                  style={{ clipPath: 'polygon(50% 50%, 100% 0, 100% 100%)' }}
-                  animate={{ rotate: -360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                />
-                <div className="absolute w-24 h-24 rounded-full bg-primary/20 blur-xl animate-pulse" />
-                <div className="z-10">
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', delay: 0.1 }}
+                  className="relative"
+                >
+                  <div className="absolute inset-0 rounded-full border border-primary/50 animate-ping" />
                   <DeviceAvatar name={sessionInfo.senderName} size="lg" active showTooltip={false} />
+                </motion.div>
+
+                <div className="space-y-1">
+                  <h2 className="text-lg font-bold tracking-widest uppercase text-foreground/90">Incoming Signal</h2>
+                  <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                    From <span className="text-primary">{sessionInfo.senderName}</span>
+                  </p>
                 </div>
-              </motion.div>
-            )}
 
-            {(status === 'transferring' || status === 'complete') && <TransferProgress />}
+                <div className="w-full rounded-xl border border-border/20 bg-card/30 p-3 space-y-2">
+                  {sessionInfo.files.map((file, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 + i * 0.05 }}
+                      className="flex items-center justify-between text-xs font-mono"
+                    >
+                      <span className="truncate text-foreground/80 pr-2">{file.name}</span>
+                      <span className="text-primary/80 shrink-0">
+                        {formatBytes(file.size)}
+                      </span>
+                    </motion.div>
+                  ))}
 
-            <div className="flex justify-center">
-              {status === 'complete' ? (
-                <Button
-                  onClick={() => window.location.href = '/'}
-                  className="bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 font-mono uppercase tracking-widest"
-                >
-                  Done
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  onClick={() => window.location.href = '/'}
-                  className="border-destructive/50 text-destructive hover:bg-destructive/10 font-mono uppercase tracking-widest"
-                >
-                  Abort
-                </Button>
-              )}
+                  <div className="pt-2 mt-2 border-t border-border/20 text-[10px] font-mono text-muted-foreground uppercase tracking-widest flex justify-between">
+                    <span>{sessionInfo.files.length} FILE{sessionInfo.files.length !== 1 ? 'S' : ''}</span>
+                    <span>{formatBytes(sessionInfo.totalSize)} TOTAL</span>
+                  </div>
+                </div>
+
+                {!isConnected && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-[10px] font-mono text-amber-500 uppercase tracking-widest"
+                  >
+                    Establishing connection...
+                  </motion.p>
+                )}
+
+                <div className="flex w-full gap-3 mt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10 font-mono uppercase tracking-widest text-xs"
+                    onClick={() => window.location.href = '/'}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    className="flex-1 bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 font-mono uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(var(--primary),0.2)]"
+                    onClick={handleAccept}
+                    disabled={!isConnected}
+                  >
+                    Accept
+                  </Button>
+                </div>
+
+                {/* E2E Security Badge */}
+                <div className="flex items-center gap-2 mt-2">
+                  <HugeiconsIcon icon={SecurityLockIcon} className="w-3 h-3 text-emerald-400" />
+                  <span className="text-[9px] font-mono text-emerald-400 uppercase tracking-widest">100% E2E Encrypted</span>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
-      </motion.div>
+          ) : (
+            <div className="space-y-8">
+              <div className="text-center space-y-2">
+                <h1 className="text-2xl font-bold tracking-widest uppercase text-foreground/90">
+                  {status === 'connecting' && 'Establishing Link'}
+                  {status === 'transferring' && 'Receiving Data'}
+                  {status === 'complete' && 'Transmission Complete'}
+                  {status === 'error' && 'Transmission Failed'}
+                </h1>
+                <div className="flex items-center justify-center gap-2">
+                  <DeviceAvatar name={sessionInfo.senderName} size="sm" />
+                  <span className="text-sm font-mono text-primary/80 uppercase tracking-wider">
+                    From {sessionInfo.senderName}
+                  </span>
+                </div>
+              </div>
+
+              {status === 'connecting' && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative flex items-center justify-center w-64 h-64 mx-auto"
+                >
+                  <div className="absolute inset-0 rounded-full border border-primary/20" />
+                  <motion.div
+                    className="absolute inset-0 rounded-full border-2 border-primary"
+                    style={{ clipPath: 'polygon(50% 50%, 100% 0, 100% 100%)' }}
+                    animate={{ rotate: -360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                  />
+                  <div className="absolute w-24 h-24 rounded-full bg-primary/20 blur-xl animate-pulse" />
+                  <div className="z-10">
+                    <DeviceAvatar name={sessionInfo.senderName} size="lg" active showTooltip={false} />
+                  </div>
+                </motion.div>
+              )}
+
+              {(status === 'transferring' || status === 'complete') && <TransferProgress />}
+
+              <div className="flex justify-center">
+                {status === 'complete' ? (
+                  <Button
+                    onClick={() => window.location.href = '/'}
+                    className="bg-primary/20 text-primary hover:bg-primary/30 border border-primary/50 font-mono uppercase tracking-widest"
+                  >
+                    Done
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/'}
+                    className="border-destructive/50 text-destructive hover:bg-destructive/10 font-mono uppercase tracking-widest"
+                  >
+                    Abort
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
     </AppShell>
   );
 }

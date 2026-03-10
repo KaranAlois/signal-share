@@ -17,6 +17,7 @@ export function useWebRTC() {
 
   const startTransfer = useCallback(
     async (targetPeerId: string, sessionId: string, files: File[]) => {
+      console.log('[WebRTC] startTransfer requested', { targetPeerId, sessionId, fileCount: files.length, transferLock });
       // Guard: only one active transfer at a time
       if (transferLock) {
         console.log('[WebRTC] startTransfer skipped — already active');
@@ -92,11 +93,14 @@ export function useWebRTC() {
       activePC = pc;
 
       try {
+        console.log('[WebRTC] Creating offer...');
         await pc.createOffer();
         setStatus('connecting');
         playTransferStart();
 
+        console.log('[WebRTC] Waiting for data channel...');
         await pc.waitForDataChannel();
+        console.log('[WebRTC] Data channel open, starting file send');
         setStatus('transferring');
 
         await pc.sendFiles(files);

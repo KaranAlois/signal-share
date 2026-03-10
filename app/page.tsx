@@ -19,7 +19,7 @@ import { useTransferStore } from '@/lib/stores/transfer-store';
 import { useTransfer } from '@/hooks/use-transfer';
 import { formatBytes } from '@/lib/webrtc/file-chunker';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Alert01Icon } from '@hugeicons/core-free-icons';
+import { Alert01Icon, SecurityLockIcon } from '@hugeicons/core-free-icons';
 import { InfoSection } from '@/components/share/info-section';
 import type { NearbyPeer } from '@/lib/stores/peers-store';
 
@@ -263,30 +263,54 @@ function SendingView() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-8"
+          className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 px-4"
         >
-          {/* Radar scanning animation */}
-          <div className="relative flex items-center justify-center w-64 h-64">
-            <motion.div
-              className="absolute inset-0 rounded-full border border-primary/30"
-              animate={{ scale: [1, 2], opacity: [0.8, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: 'easeOut' }}
-            />
-            <motion.div
-              className="absolute inset-0 rounded-full border border-primary/30"
-              animate={{ scale: [1, 2], opacity: [0.8, 0] }}
-              transition={{ repeat: Infinity, duration: 2, ease: 'easeOut', delay: 1 }}
-            />
-            <div className="absolute inset-0 rounded-full border border-primary/10" />
-            <div className="absolute w-16 h-16 rounded-full bg-primary/20 blur-xl" />
+          {/* Main Code/Radar section (2 columns) */}
+          <div className="lg:col-span-2 flex flex-col items-center justify-center gap-8 bg-card/10 border border-primary/10 rounded-3xl p-8 backdrop-blur-md shadow-[0_0_30px_rgba(var(--primary),0.05)]">
+            <div className="text-center space-y-2 mb-2">
+              <h3 className="text-lg font-bold tracking-widest uppercase text-foreground/80">Transfer Code</h3>
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Share this code with the receiver</p>
+            </div>
+            
+            {/* Radar scanning animation */}
+            <div className="relative flex items-center justify-center w-64 h-64">
+              <motion.div
+                className="absolute inset-0 rounded-full border border-primary/30"
+                animate={{ scale: [1, 2], opacity: [0.8, 0] }}
+                transition={{ repeat: Infinity, duration: 2, ease: 'easeOut' }}
+              />
+              <motion.div
+                className="absolute inset-0 rounded-full border border-primary/30"
+                animate={{ scale: [1, 2], opacity: [0.8, 0] }}
+                transition={{ repeat: Infinity, duration: 2, ease: 'easeOut', delay: 1 }}
+              />
+              <div className="absolute inset-0 rounded-full border border-primary/10" />
+              <div className="absolute w-16 h-16 rounded-full bg-primary/20 blur-xl" />
 
-            <div className="z-10 flex flex-col items-center gap-4">
-              {transferCode && <TransferCode mode="display" code={transferCode} />}
+              <div className="z-10 flex flex-col items-center gap-4">
+                {transferCode && <TransferCode mode="display" code={transferCode} />}
+              </div>
             </div>
           </div>
 
-          {shareLink && <ShareLink link={shareLink} />}
-          {shareLink && <QRCodeDisplay value={shareLink} />}
+          {/* QR Code and Link section (1 column) */}
+          <div className="flex flex-col items-center justify-center gap-8 bg-card/10 border border-primary/10 rounded-3xl p-6 lg:p-8 backdrop-blur-md shadow-[0_0_30px_rgba(var(--primary),0.05)]">
+            <div className="text-center space-y-2 w-full">
+              <h3 className="text-lg font-bold tracking-widest uppercase text-foreground/80">Scan or Share</h3>
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Alternative methods</p>
+            </div>
+            
+            <div className="flex flex-col items-center gap-6 w-full">
+              {shareLink && <QRCodeDisplay value={shareLink} />}
+              <div className="w-full h-px bg-border/40 my-1" />
+              {shareLink && <ShareLink link={shareLink} />}
+              {/* E2E Security Badge */}
+              <div className="flex items-center gap-2 mt-4 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                <HugeiconsIcon icon={SecurityLockIcon} className="w-4 h-4" />
+                <span className="text-[10px] font-mono uppercase tracking-widest">100% End-to-End Encrypted via WebRTC</span>
+              </div>
+            </div>
+          </div>
         </motion.div>
       )}
 

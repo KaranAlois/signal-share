@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { formatBytes } from '@/lib/webrtc/file-chunker';
+import { processDataTransfer } from '@/lib/utils/zip';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Image02Icon as ImageIcon,
@@ -26,6 +27,7 @@ interface FileDropZoneProps {
 
 export function FileDropZone({ onFilesSelected, disabled, initialFiles }: FileDropZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>(initialFiles || []);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,14 +44,21 @@ export function FileDropZone({ onFilesSelected, disabled, initialFiles }: FileDr
   }, []);
 
   const handleDrop = useCallback(
-    (e: React.DragEvent) => {
+    async (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragOver(false);
 
-      const files = Array.from(e.dataTransfer.files);
-      if (files.length > 0) {
-        setSelectedFiles((prev) => [...prev, ...files]);
+      setIsProcessing(true);
+      try {
+        const files = await processDataTransfer(e.dataTransfer);
+        if (files.length > 0) {
+          setSelectedFiles((prev) => [...prev, ...files]);
+        }
+      } catch (err) {
+        console.error('Error processing dropped items', err);
+      } finally {
+        setIsProcessing(false);
       }
     },
     [],
@@ -143,10 +152,10 @@ export function FileDropZone({ onFilesSelected, disabled, initialFiles }: FileDr
             </motion.div>
             <div>
               <p className="text-base font-medium text-foreground">
-                {isDragOver ? 'Drop files here' : 'Drag & drop files here'}
+                {isProcessing ? 'Processing files...' : isDragOver ? 'Drop files here' : 'Drag & drop files here'}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                or click to browse • any file type • no size limit
+                {isProcessing ? 'Zipping directories...' : 'or click to browse • files & folders • no size limit'}
               </p>
             </div>
           </div>

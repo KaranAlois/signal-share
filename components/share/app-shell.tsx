@@ -6,9 +6,11 @@ import { motion } from 'framer-motion';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { GithubIcon, Rocket01Icon } from '@hugeicons/core-free-icons';
+import { GithubIcon, Rocket01Icon, Time02Icon, Calendar01Icon } from '@hugeicons/core-free-icons';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { SoundToggle } from '@/components/sound-toggle';
+import { DeviceAvatar } from '@/components/share/device-avatar';
+import { GlobalDropZone } from '@/components/share/global-drop-zone';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 
@@ -53,6 +55,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-4">
               <div className="hidden sm:flex items-center gap-4 mr-2">
+                <Link href="/history" className="text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+                  <HugeiconsIcon icon={Time02Icon} className="w-4 h-4" />
+                  <span>History</span>
+                </Link>
+                <Link href="/change-logs" className="text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors flex items-center gap-1.5">
+                  <HugeiconsIcon icon={Calendar01Icon} className="w-4 h-4" />
+                  <span>Updates</span>
+                </Link>
                 <Link href="/docs" className="text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors">Docs</Link>
                 <a href="https://github.com/abhie7/signal-share" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-primary transition-colors">
                   <HugeiconsIcon icon={GithubIcon} className="w-4 h-4" />
@@ -65,9 +75,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
               <div className="flex items-center gap-3 rounded-full border border-border/40 bg-background/40 px-4 py-1.5 backdrop-blur-md">
                 {deviceName && (
-                  <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
-                    {deviceName}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <DeviceAvatar name={deviceName} size="sm" />
+                    <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                      {deviceName}
+                    </span>
+                  </div>
                 )}
                 <div className="relative flex h-2 w-2 items-center justify-center">
                   {isConnected && (
@@ -89,6 +102,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
+        <GlobalDropZone />
         <Toaster position="bottom-right" theme={(resolvedTheme as 'dark' | 'light') || 'dark'} />
       </div>
     </TooltipProvider>
